@@ -20,10 +20,10 @@ import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtDecoders;
-import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -127,11 +127,27 @@ public class SecurityConfig {
             @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuerUri,
             @Value("${andesstay.azure.audience}") String audience) {
         NimbusJwtDecoder jwtDecoder = JwtDecoders.fromIssuerLocation(issuerUri);
-        OAuth2TokenValidator<Jwt> issuerValidator = JwtValidators.createDefaultWithIssuer(issuerUri);
+
+        // Validador de expiración del token (exp / nbf)
+        OAuth2TokenValidator<Jwt> timestampValidator = new JwtTimestampValidator();
+
+        // Validador flexible de Issuer (permite login.microsoftonline.com o sts.windows.net)
+        OAuth2TokenValidator<Jwt> issuerValidator = jwt -> {
+            String iss = jwt.getClaimAsString("iss");
+            if (iss != null && (iss.contains("login.microsoftonline.com") || iss.contains("sts.windows.net"))) {
+                return OAuth2TokenValidatorResult.success();
+            }
+            logger.warn("JWT issuer rechazado. Recibido: {}", iss);
+            return OAuth2TokenValidatorResult.failure(new OAuth2Error(
+                    "invalid_token", "The iss claim is not valid", null));
+        };
+
+        // Validador de Audiencia
         String normalizedAudience = audience.startsWith("api://")
                 ? audience.substring("api://".length())
                 : audience;
         String apiAudience = "api://" + normalizedAudience;
+
         OAuth2TokenValidator<Jwt> audienceValidator = jwt -> {
             if (!jwt.getAudience().contains(normalizedAudience) && !jwt.getAudience().contains(apiAudience)) {
                 logger.warn("JWT audience rechazado. Recibido: {}, esperado: {}", jwt.getAudience(), audience);
@@ -140,7 +156,13 @@ public class SecurityConfig {
             }
             return OAuth2TokenValidatorResult.success();
         };
-        jwtDecoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(issuerValidator, audienceValidator));
+
+        jwtDecoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
+                timestampValidator,
+                issuerValidator,
+                audienceValidator
+        ));
+
         return jwtDecoder;
     }
 }

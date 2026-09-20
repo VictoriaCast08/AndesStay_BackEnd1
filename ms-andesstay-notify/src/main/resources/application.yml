@@ -4,7 +4,7 @@ spring:
   profiles:
     default: azure
   config:
-    import: optional:file:.env[.properties]
+    import: optional:file:./.env
 
 server:
   port: 8084
