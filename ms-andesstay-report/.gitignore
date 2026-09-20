@@ -1,7 +1,4 @@
 target/
 *.jar
-.env
-.env
-!.env
 .idea/
 *.log

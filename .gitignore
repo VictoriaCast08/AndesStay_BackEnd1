@@ -1,12 +1,7 @@
 **/target/
 *.jar
 *.class
-.env
-ms-andesstay-report/.env
-!.env.example
-**/.env
-ms-andesstay-report/.env
-!ms-andesstay-report/.env
+
 .idea/
 *.iml
 .vscode/

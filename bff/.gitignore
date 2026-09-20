@@ -1,10 +1,6 @@
 target/
 *.jar
 *.class
-.env
-.env.andesstay
-.env
-!.env
 .idea/
 *.iml
 .vscode/
