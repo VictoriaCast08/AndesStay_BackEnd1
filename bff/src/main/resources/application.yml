@@ -4,7 +4,7 @@ spring:
   profiles:
     default: azure
   config:
-    import: optional:file:${ENV_FILE:.env.andesstay}[.properties]
+    import: optional:file:.env[.properties]
 
 server:
   port: 8080
@@ -17,7 +17,8 @@ management:
 
 andesstay:
   azure:
-    audience: ${AZURE_AUDIENCE:api://andesstay-api}
+    issuer-uri: ${AZURE_ISSUER_URI:https://login.microsoftonline.com/35442bb9-6147-4555-8ac7-7aea33ca4c73/v2.0}
+    audience: ${AZURE_AUDIENCE:api://5bf59bf1-a4c7-4169-975d-8976a17e9b60}
   cors:
     allowed-origins: ${ANDESSTAY_CORS_ORIGINS:http://127.0.0.1:4200,http://localhost:4200,http://localhost:5173}
 
@@ -30,7 +31,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${AZURE_ISSUER_URI:https://login.microsoftonline.com/${AZURE_TENANT_ID:common}/v2.0}
+          issuer-uri: ${AZURE_ISSUER_URI:https://login.microsoftonline.com/35442bb9-6147-4555-8ac7-7aea33ca4c73/v2.0}
 
 ---
 spring:
@@ -45,4 +46,5 @@ spring:
 
 andesstay:
   azure:
+    issuer-uri: http://localhost/unused
     audience: local

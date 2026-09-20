@@ -3,8 +3,8 @@ target/
 *.class
 .env
 .env.andesstay
-.env.*
-!.env.example
+.env
+!.env
 .idea/
 *.iml
 .vscode/

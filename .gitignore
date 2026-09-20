@@ -2,11 +2,11 @@
 *.jar
 *.class
 .env
-.env.*
+ms-andesstay-report/.env
 !.env.example
 **/.env
-**/.env.*
-!**/.env.example
+ms-andesstay-report/.env
+!ms-andesstay-report/.env
 .idea/
 *.iml
 .vscode/

@@ -58,14 +58,6 @@ cd bff && mvn test
 cd ms-andesstay-reservations && mvn test
 # ...
 ```
-
-## Entrega
-
-Repositorio: `https://github.com/DsDekoV02/AndesStay_BackEnd`  
-Frontend: `https://github.com/DsDekoV02/AndesStay_FrontEnd`
-
-Pegar ambos enlaces en AVA y copia al correo del docente según el encargo EP1.
-
 ## Pendiente en Azure / AWS
 
 1. App Registration (SPA + API + App Roles) → ver `docs/entra-id-setup.md`
