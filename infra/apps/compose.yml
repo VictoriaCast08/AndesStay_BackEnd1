@@ -1,0 +1,81 @@
+# AndesStay — apps en EC2 (plantilla EP1)
+# Usar con: docker compose up -d
+# Imágenes: construir localmente o desde GHCR tras CI
+
+services:
+  ms-andesstay-bff:
+    image: ms-andesstay-bff:latest
+    container_name: ms-andesstay-bff
+    ports:
+      - "80:8080"
+    environment:
+      AZURE_ISSUER_URI: ${AZURE_ISSUER_URI}
+      AZURE_AUDIENCE: ${AZURE_AUDIENCE}
+      ANDESSTAY_CORS_ORIGINS: ${ANDESSTAY_CORS_ORIGINS:-http://localhost:4200}
+      SPRING_PROFILES_ACTIVE: azure
+    restart: unless-stopped
+
+  ms-andesstay-reservations:
+    image: ms-andesstay-reservations:latest
+    container_name: ms-andesstay-reservations
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: azure
+      AZURE_ISSUER_URI: ${AZURE_ISSUER_URI}
+      AZURE_AUDIENCE: ${AZURE_AUDIENCE}
+      ORACLE_URL: ${ORACLE_URL}
+      ORACLE_USER: ${ORACLE_USER}
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD}
+    restart: unless-stopped
+
+  ms-andesstay-catalog:
+    image: ms-andesstay-catalog:latest
+    container_name: ms-andesstay-catalog
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: azure
+      AZURE_ISSUER_URI: ${AZURE_ISSUER_URI}
+      AZURE_AUDIENCE: ${AZURE_AUDIENCE}
+      ORACLE_URL: ${ORACLE_URL}
+      ORACLE_USER: ${ORACLE_USER}
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD}
+    restart: unless-stopped
+
+  ms-andesstay-notify:
+    image: ms-andesstay-notify:latest
+    container_name: ms-andesstay-notify
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: azure
+      RABBITMQ_HOST: ${RABBITMQ_HOST:-rabbitmq}
+      RABBITMQ_PORT: ${RABBITMQ_PORT:-5672}
+    restart: unless-stopped
+
+  ms-andesstay-audit:
+    image: ms-andesstay-audit:latest
+    container_name: ms-andesstay-audit
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_PROFILES_ACTIVE: azure
+      KAFKA_BOOTSTRAP: ${KAFKA_BOOTSTRAP:-kafka:9092}
+      ORACLE_URL: ${ORACLE_URL}
+      ORACLE_USER: ${ORACLE_USER}
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD}
+    restart: unless-stopped
+
+  ms-andesstay-report:
+    image: ms-andesstay-report:latest
+    container_name: ms-andesstay-report
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_PROFILES_ACTIVE: azure
+      KAFKA_BOOTSTRAP: ${KAFKA_BOOTSTRAP:-kafka:9092}
+      ORACLE_URL: ${ORACLE_URL}
+      ORACLE_USER: ${ORACLE_USER}
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD}
+    restart: unless-stopped

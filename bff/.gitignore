@@ -1,0 +1,12 @@
+target/
+*.jar
+*.class
+.env
+.env.andesstay
+.env.*
+!.env.example
+.idea/
+*.iml
+.vscode/
+.DS_Store
+*.log

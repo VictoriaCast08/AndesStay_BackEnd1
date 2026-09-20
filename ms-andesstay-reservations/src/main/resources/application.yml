@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: ms-andesstay-reservations
+  profiles:
+    default: azure
+  config:
+    import: optional:file:${ENV_FILE:.env.andesstay}[.properties]
+
+server:
+  port: 8082
+
+andesstay:
+  azure:
+    audience: ${AZURE_AUDIENCE:api://andesstay-api}
+  cors:
+    allowed-origins: ${ANDESSTAY_CORS_ORIGINS:http://localhost:4200,http://127.0.0.1:4200}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:h2:mem:ms-andesstay-reservations;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    defer-datasource-initialization: true
+  h2:
+    console:
+      enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AZURE_ISSUER_URI:http://localhost/unused}
+
+andesstay:
+  azure:
+    audience: local
+
+---
+spring:
+  config:
+    activate:
+      on-profile: azure
+  datasource:
+    url: ${ORACLE_URL:jdbc:oracle:thin:@localhost:1521/FREEPDB1}
+    username: ${ORACLE_USER:andesstay}
+    password: ${ORACLE_PASSWORD:change-me}
+    driver-class-name: oracle.jdbc.OracleDriver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.OracleDialect
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AZURE_ISSUER_URI:https://login.microsoftonline.com/${AZURE_TENANT_ID:common}/v2.0}

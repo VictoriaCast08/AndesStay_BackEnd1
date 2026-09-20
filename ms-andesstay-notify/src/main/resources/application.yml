@@ -1,0 +1,55 @@
+spring:
+  application:
+    name: ms-andesstay-notify
+  profiles:
+    default: azure
+  config:
+    import: optional:file:${ENV_FILE:.env.andesstay}[.properties]
+
+server:
+  port: 8084
+
+andesstay:
+  azure:
+    audience: ${AZURE_AUDIENCE:api://andesstay-api}
+  cors:
+    allowed-origins: ${ANDESSTAY_CORS_ORIGINS:http://localhost:4200,http://127.0.0.1:4200}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AZURE_ISSUER_URI:http://localhost/unused}
+
+andesstay:
+  azure:
+    audience: local
+
+---
+spring:
+  config:
+    activate:
+      on-profile: azure
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${AZURE_ISSUER_URI:https://login.microsoftonline.com/${AZURE_TENANT_ID:common}/v2.0}
+
+andesstay:
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+  kafka:
+    bootstrap: ${KAFKA_BOOTSTRAP:localhost:9092}
