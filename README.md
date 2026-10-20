@@ -13,7 +13,6 @@ JWT (Microsoft Entra ID) → AWS API Gateway (JWT Authorizer) → ms-andesstay-b
 | `bff/` | ms-andesstay-bff | 8080 | Valida JWT (issuer, audience, firma, roles) |
 | `ms-andesstay-reservations/` | Reservas | 8082 | CRUD y estados de reserva |
 | `ms-andesstay-catalog/` | Catálogo | 8083 | Unidades y disponibilidad |
-| `ms-andesstay-notify/` | Notificaciones | 8084 | Consumer RabbitMQ (esqueleto) |
 | `ms-andesstay-audit/` | Auditoría | 8085 | Timeline (lectura) |
 | `ms-andesstay-report/` | Reportería | 8086 | KPIs |
 | `docs/` | Guías | — | Entra ID + API Gateway |

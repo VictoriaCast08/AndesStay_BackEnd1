@@ -15,7 +15,6 @@ services:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=azure
-      - NOTIFY_SERVICE_URL=http://ms-andesstay-notify:8084
       - AUDIT_SERVICE_URL=http://ms-andesstay-audit:8086
       - CATALOG_SERVICE_URL=http://ms-andesstay-catalog:8082
       - REPORT_SERVICE_URL=http://ms-andesstay-report:8085
@@ -27,28 +26,7 @@ services:
     networks:
       - andesstay-net
 
-  # --- 2. MICROSERVICIO NOTIFY (Puerto 8084) ---
-  ms-andesstay-notify:
-    build:
-      context: ./ms-andesstay-notify
-      dockerfile: Dockerfile
-    container_name: ms-andesstay-notify
-    ports:
-      - "8084:8084"
-    environment:
-      - SPRING_PROFILES_ACTIVE=azure
-      - RABBITMQ_HOST=54.xxx.xxx.xxx # Reemplazar con la IP de la EC2 donde esté RabbitMQ
-      - RABBITMQ_PORT=5672
-      - RABBITMQ_USER=guest
-      - RABBITMQ_PASS=guest
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-    networks:
-      - andesstay-net
-
-  # --- 3. MICROSERVICIO CATALOG (Puerto 8082) ---
+  # --- 2. MICROSERVICIO CATALOG (Puerto 8082) ---
   ms-andesstay-catalog:
     build:
       context: ./ms-andesstay-catalog
@@ -65,7 +43,7 @@ services:
     networks:
       - andesstay-net
 
-  # --- 4. MICROSERVICIO RESERVATIONS (Puerto 8083) ---
+  # --- 3. MICROSERVICIO RESERVATIONS (Puerto 8083) ---
   ms-andesstay-reservations:
     build:
       context: ./ms-andesstay-reservations
@@ -82,7 +60,7 @@ services:
     networks:
       - andesstay-net
 
-  # --- 5. MICROSERVICIO REPORT (Puerto 8085) ---
+  # --- 4. MICROSERVICIO REPORT (Puerto 8085) ---
   ms-andesstay-report:
     build:
       context: ./ms-andesstay-report
@@ -99,7 +77,7 @@ services:
     networks:
       - andesstay-net
 
-  # --- 6. MICROSERVICIO AUDIT (Puerto 8086) ---
+  # --- 5. MICROSERVICIO AUDIT (Puerto 8086) ---
   ms-andesstay-audit:
     build:
       context: ./ms-andesstay-audit

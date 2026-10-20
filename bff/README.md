@@ -113,6 +113,3 @@ docker run -d --name ms-andesstay-bff -p 8080:8080 `
 4. **Roles**: `@PreAuthorize` por endpoint
 5. **Códigos**: 401 vs 403 con JSON de error
 
-## Entrega
-
-Repositorio GitHub sugerido: `ms-andesstay-bff`. No subir `target/` ni `.env`. Enviar el enlace al docente según el encargo EP1.
