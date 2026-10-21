@@ -5,6 +5,48 @@ networks:
     driver: bridge
 
 services:
+  # --- BROKER DE MENSAJERÍA (RabbitMQ Clúster - Nodo 1) ---
+  rabbitmq1:
+    image: rabbitmq:3.12-management-alpine
+    container_name: rabbitmq1
+    hostname: rabbitmq1
+    ports:
+      - "5672:5672"   # Puerto AMQP Principal
+      - "15672:15672" # Dashboard Web Management
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "AndesStayClusterCookie2026"
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
+    networks:
+      - andesstay-net
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    restart: unless-stopped
+
+  # --- BROKER DE MENSAJERÍA (RabbitMQ Clúster - Nodo 2) ---
+  rabbitmq2:
+    image: rabbitmq:3.12-management-alpine
+    container_name: rabbitmq2
+    hostname: rabbitmq2
+    ports:
+      - "5673:5672"   # Puerto AMQP Secundario
+      - "15673:15672" # Dashboard Web Secundario
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "AndesStayClusterCookie2026"
+      RABBITMQ_DEFAULT_USER: "guest"
+      RABBITMQ_DEFAULT_PASS: "guest"
+    depends_on:
+      - rabbitmq1
+    networks:
+      - andesstay-net
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+    restart: unless-stopped
+
   # --- 1. BFF GATEWAY (Puerto 8080) ---
   bff-service:
     build:
@@ -14,17 +56,21 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=azure
-      - AUDIT_SERVICE_URL=http://ms-andesstay-audit:8086
-      - CATALOG_SERVICE_URL=http://ms-andesstay-catalog:8082
-      - REPORT_SERVICE_URL=http://ms-andesstay-report:8085
-      - RESERVATIONS_SERVICE_URL=http://ms-andesstay-reservations:8083
+      SPRING_PROFILES_ACTIVE: azure
+      AZURE_ISSUER_URI: ${AZURE_ISSUER_URI}
+      AZURE_AUDIENCE: ${AZURE_AUDIENCE}
+      ANDESSTAY_CORS_ORIGINS: ${ANDESSTAY_CORS_ORIGINS:-http://localhost:4200}
+      RESERVATIONS_SERVICE_URL: ${RESERVATIONS_SERVICE_URL:-http://ms-andesstay-reservations:8083}
+      CATALOG_SERVICE_URL: http://ms-andesstay-catalog:8082
+      REPORT_SERVICE_URL: http://ms-andesstay-report:8085
+      AUDIT_SERVICE_URL: http://ms-andesstay-audit:8086
+    networks:
+      - andesstay-net
     deploy:
       resources:
         limits:
           memory: 512M
-    networks:
-      - andesstay-net
+    restart: unless-stopped
 
   # --- 2. MICROSERVICIO CATALOG (Puerto 8082) ---
   ms-andesstay-catalog:
@@ -35,15 +81,18 @@ services:
     ports:
       - "8082:8082"
     environment:
-      - SPRING_PROFILES_ACTIVE=azure
+      SPRING_PROFILES_ACTIVE: azure
+      AZURE_ISSUER_URI: ${AZURE_ISSUER_URI}
+      AZURE_AUDIENCE: ${AZURE_AUDIENCE}
+    networks:
+      - andesstay-net
     deploy:
       resources:
         limits:
           memory: 512M
-    networks:
-      - andesstay-net
+    restart: unless-stopped
 
-  # --- 3. MICROSERVICIO RESERVATIONS (Puerto 8083) ---
+  # --- 3. MICROSERVICIO RESERVATIONS (Puerto 8083 - Productor Eventos + Postgres RDS) ---
   ms-andesstay-reservations:
     build:
       context: ./ms-andesstay-reservations
@@ -52,13 +101,23 @@ services:
     ports:
       - "8083:8083"
     environment:
-      - SPRING_PROFILES_ACTIVE=azure
+      SPRING_PROFILES_ACTIVE: azure
+      AZURE_ISSUER_URI: ${AZURE_ISSUER_URI}
+      AZURE_AUDIENCE: ${AZURE_AUDIENCE}
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      SPRING_RABBITMQ_HOSTS: rabbitmq1:5672,rabbitmq2:5672
+    depends_on:
+      - rabbitmq1
+      - rabbitmq2
+    networks:
+      - andesstay-net
     deploy:
       resources:
         limits:
           memory: 512M
-    networks:
-      - andesstay-net
+    restart: unless-stopped
 
   # --- 4. MICROSERVICIO REPORT (Puerto 8085) ---
   ms-andesstay-report:
@@ -69,13 +128,16 @@ services:
     ports:
       - "8085:8085"
     environment:
-      - SPRING_PROFILES_ACTIVE=azure
+      SPRING_PROFILES_ACTIVE: azure
+      AZURE_ISSUER_URI: ${AZURE_ISSUER_URI}
+      AZURE_AUDIENCE: ${AZURE_AUDIENCE}
+    networks:
+      - andesstay-net
     deploy:
       resources:
         limits:
           memory: 512M
-    networks:
-      - andesstay-net
+    restart: unless-stopped
 
   # --- 5. MICROSERVICIO AUDIT (Puerto 8086) ---
   ms-andesstay-audit:
@@ -86,10 +148,13 @@ services:
     ports:
       - "8086:8086"
     environment:
-      - SPRING_PROFILES_ACTIVE=azure
+      SPRING_PROFILES_ACTIVE: azure
+      AZURE_ISSUER_URI: ${AZURE_ISSUER_URI}
+      AZURE_AUDIENCE: ${AZURE_AUDIENCE}
+    networks:
+      - andesstay-net
     deploy:
       resources:
         limits:
           memory: 512M
-    networks:
-      - andesstay-net
+    restart: unless-stopped

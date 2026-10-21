@@ -11,10 +11,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapea claims de Entra ID (roles / groups) a autoridades Spring ROLE_*.
- * Caso AndesStay: Admin, Operador, Cliente, Auditor.
- */
 @Component
 public class JwtRoleConverter implements Converter<Jwt, AbstractAuthenticationToken> {
 
@@ -23,6 +19,7 @@ public class JwtRoleConverter implements Converter<Jwt, AbstractAuthenticationTo
         Collection<GrantedAuthority> authorities = new ArrayList<>();
         authorities.addAll(extractRoles(jwt.getClaimAsStringList("roles")));
         authorities.addAll(extractRoles(jwt.getClaimAsStringList("groups")));
+
         Object scp = jwt.getClaim("scp");
         if (scp instanceof String scope && !scope.isBlank()) {
             for (String s : scope.split(" ")) {

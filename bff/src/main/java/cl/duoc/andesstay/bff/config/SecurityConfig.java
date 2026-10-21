@@ -128,10 +128,8 @@ public class SecurityConfig {
             @Value("${andesstay.azure.audience}") String audience) {
         NimbusJwtDecoder jwtDecoder = JwtDecoders.fromIssuerLocation(issuerUri);
 
-        // Validador de expiración del token (exp / nbf)
         OAuth2TokenValidator<Jwt> timestampValidator = new JwtTimestampValidator();
 
-        // Validador flexible de Issuer (permite login.microsoftonline.com o sts.windows.net)
         OAuth2TokenValidator<Jwt> issuerValidator = jwt -> {
             String iss = jwt.getClaimAsString("iss");
             if (iss != null && (iss.contains("login.microsoftonline.com") || iss.contains("sts.windows.net"))) {
@@ -142,7 +140,6 @@ public class SecurityConfig {
                     "invalid_token", "The iss claim is not valid", null));
         };
 
-        // Validador de Audiencia
         String normalizedAudience = audience.startsWith("api://")
                 ? audience.substring("api://".length())
                 : audience;
