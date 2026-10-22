@@ -8,6 +8,8 @@ spring:
 
 server:
   port: 8080
+  # Permite que Spring Boot reconozca el contexto (/dev) y protocolo enviado por API Gateway
+  forward-headers-strategy: framework
 
 management:
   endpoints:
@@ -20,9 +22,12 @@ andesstay:
     issuer-uri: ${AZURE_ISSUER_URI:https://login.microsoftonline.com/35442bb9-6147-4555-8ac7-7aea33ca4c73/v2.0}
     audience: ${AZURE_AUDIENCE:api://6a84e40b-9b22-40e4-b05a-16b64df43827}
   cors:
-    allowed-origins: ${ANDESSTAY_CORS_ORIGINS:http://127.0.0.1:4200,http://localhost:4200,http://localhost:5173}
+    allowed-origins: ${ANDESSTAY_CORS_ORIGINS:http://127.0.0.1:4200,http://localhost:4200,http://localhost:5173,https://dj58a09m4k.execute-api.us-east-1.amazonaws.com}
   services:
     reservations-url: ${RESERVATIONS_SERVICE_URL:http://ms-andesstay-reservations:8083}
+    catalog-url: ${CATALOG_SERVICE_URL:http://ms-andesstay-catalog:8082}
+    report-url: ${REPORT_SERVICE_URL:http://ms-andesstay-report:8085}
+    audit-url: ${AUDIT_SERVICE_URL:http://ms-andesstay-audit:8086}
 
 ---
 spring:
@@ -52,3 +57,6 @@ andesstay:
     audience: local
   services:
     reservations-url: http://localhost:8083
+    catalog-url: http://localhost:8082
+    report-url: http://localhost:8085
+    audit-url: http://localhost:8086
