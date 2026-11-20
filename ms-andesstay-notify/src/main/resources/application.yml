@@ -1,0 +1,111 @@
+spring:
+  application:
+    name: ms-andesstay-notify
+  profiles:
+    default: azure
+  config:
+    import: optional:file:.env[.properties]
+  rabbitmq:
+    # Conexión a RabbitMQ en Instancia B externa (Consumidor de eventos)
+    host: ${EC2_RABBITMQ_IP}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER}
+    password: ${RABBITMQ_PASS}
+    listener:
+      simple:
+        acknowledge-mode: manual
+        default-requeue-rejected: false
+
+server:
+  port: 8083
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+andesstay:
+  azure:
+    audience: ${AZURE_CLIENT_ID}
+    tenant-id: ${AZURE_TENANT_ID}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+  rabbitmq:
+    exchanges:
+      cmd: ex.andesstay.cmd
+      topic: amq.topic
+      dlx: ex.andesstay.dlx
+    queues:
+      email: q.cmd.email
+      email-dlq: q.cmd.email.dlq
+      tickets: q.cmd.tickets
+      tickets-dlq: q.cmd.tickets.dlq
+      documents: q.cmd.documents
+      documents-dlq: q.cmd.documents.dlq
+      reservations: q.event.reservations
+      reservations-dlq: q.event.reservations.dlq
+    routing-keys:
+      email: q.cmd.email
+      tickets: q.cmd.tickets
+      documents: q.cmd.documents
+      email-dlq: q.cmd.email.dlq
+      tickets-dlq: q.cmd.tickets.dlq
+      documents-dlq: q.cmd.documents.dlq
+      reservations: reservation.#
+      reservations-dlq: q.event.reservations.dlq
+      reservation-created: reservation.created
+      reservation-updated: reservation.updated
+
+---
+spring:
+  config:
+    activate:
+      on-profile: azure
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: https://login.microsoftonline.com/common/discovery/v2.0/keys
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: false
+
+andesstay:
+  azure:
+    audience: local
+    tenant-id: local
+  cors:
+    allowed-origins: http://localhost:4200,http://localhost:5173
+  rabbitmq:
+    exchanges:
+      cmd: ex.andesstay.cmd
+      topic: amq.topic
+      dlx: ex.andesstay.dlx
+    queues:
+      email: q.cmd.email
+      email-dlq: q.cmd.email.dlq
+      tickets: q.cmd.tickets
+      tickets-dlq: q.cmd.tickets.dlq
+      documents: q.cmd.documents
+      documents-dlq: q.cmd.documents.dlq
+      reservations: q.event.reservations
+      reservations-dlq: q.event.reservations.dlq
+    routing-keys:
+      email: q.cmd.email
+      tickets: q.cmd.tickets
+      documents: q.cmd.documents
+      email-dlq: q.cmd.email.dlq
+      tickets-dlq: q.cmd.tickets.dlq
+      documents-dlq: q.cmd.documents.dlq
+      reservations: reservation.#
+      reservations-dlq: q.event.reservations.dlq
+      reservation-created: reservation.created
+      reservation-updated: reservation.updated

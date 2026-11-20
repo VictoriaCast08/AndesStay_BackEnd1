@@ -1,5 +1,5 @@
 # AWS API Gateway (HTTP API) + JWT Authorizer — AndesStay
-
+# actualizacion de codigo n2 
 El flujo del caso es siempre:
 
 ```text
