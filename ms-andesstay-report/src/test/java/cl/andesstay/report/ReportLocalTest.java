@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.report;
+package cl.andesstay.report;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;

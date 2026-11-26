@@ -1,8 +1,8 @@
-package cl.duoc.andesstay.notify.web;
+package cl.andesstay.notify.web;
 
-import cl.duoc.andesstay.notify.dto.CreateExchangeRequest;
-import cl.duoc.andesstay.notify.dto.CreateQueueRequest;
-import cl.duoc.andesstay.notify.service.RabbitAdminService;
+import cl.andesstay.notify.dto.CreateExchangeRequest;
+import cl.andesstay.notify.dto.CreateQueueRequest;
+import cl.andesstay.notify.service.RabbitAdminService;
 import jakarta.validation.Valid;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;

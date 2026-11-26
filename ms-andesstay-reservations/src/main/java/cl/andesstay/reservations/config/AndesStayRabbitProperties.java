@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.reservations.config;
+package cl.andesstay.reservations.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.reservations.config;
+package cl.andesstay.reservations.config;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -7,14 +7,23 @@ spring:
     import: optional:file:.env[.properties]
   rabbitmq:
     # Conexión a RabbitMQ en Instancia B externa (Consumidor de eventos)
-    host: ${EC2_RABBITMQ_IP}
-    port: ${RABBITMQ_PORT:5672}
+    addresses: ${RABBITMQ_ADDRESSES:34.194.82.57:5672,34.194.82.57:5673}
     username: ${RABBITMQ_USER}
     password: ${RABBITMQ_PASS}
     listener:
       simple:
         acknowledge-mode: manual
         default-requeue-rejected: false
+
+  # Kafka - clúster 3 brokers (disponible para uso futuro del microservicio)
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: ${SPRING_KAFKA_CONSUMER_GROUP:andesstay-notify-group}
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+    properties:
+      spring.json.trusted.packages: "*"
 
 server:
   port: 8083
@@ -66,7 +75,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: https://login.microsoftonline.com/common/discovery/v2.0/keys
+          jwk-set-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID}/discovery/v2.0/keys
 
 ---
 spring:

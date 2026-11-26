@@ -1,9 +1,9 @@
-package cl.duoc.andesstay.reservations.web;
+package cl.andesstay.reservations.web;
 
-import cl.duoc.andesstay.reservations.admin.RabbitAdminService;
-import cl.duoc.andesstay.reservations.web.dto.BindingRequestDTO;
-import cl.duoc.andesstay.reservations.web.dto.ExchangeRequestDTO;
-import cl.duoc.andesstay.reservations.web.dto.QueueRequestDTO;
+import cl.andesstay.reservations.admin.RabbitAdminService;
+import cl.andesstay.reservations.web.dto.BindingRequestDTO;
+import cl.andesstay.reservations.web.dto.ExchangeRequestDTO;
+import cl.andesstay.reservations.web.dto.QueueRequestDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

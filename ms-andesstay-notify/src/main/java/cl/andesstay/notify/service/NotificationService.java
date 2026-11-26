@@ -1,7 +1,7 @@
-package cl.duoc.andesstay.notify.service;
+package cl.andesstay.notify.service;
 
-import cl.duoc.andesstay.notify.config.AndesStayRabbitProperties;
-import cl.duoc.andesstay.notify.dto.NotificationRequest;
+import cl.andesstay.notify.config.AndesStayRabbitProperties;
+import cl.andesstay.notify.dto.NotificationRequest;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;

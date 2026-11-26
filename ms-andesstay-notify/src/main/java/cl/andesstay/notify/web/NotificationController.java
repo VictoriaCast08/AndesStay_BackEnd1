@@ -1,7 +1,7 @@
-package cl.duoc.andesstay.notify.web;
+package cl.andesstay.notify.web;
 
-import cl.duoc.andesstay.notify.dto.NotificationRequest;
-import cl.duoc.andesstay.notify.service.NotificationService;
+import cl.andesstay.notify.dto.NotificationRequest;
+import cl.andesstay.notify.service.NotificationService;
 import jakarta.validation.Valid;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;

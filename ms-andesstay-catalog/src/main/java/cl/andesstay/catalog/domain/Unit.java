@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.catalog.domain;
+package cl.andesstay.catalog.domain;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;

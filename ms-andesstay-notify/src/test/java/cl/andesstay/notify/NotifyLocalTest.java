@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.notify;
+package cl.andesstay.notify;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;

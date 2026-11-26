@@ -59,6 +59,12 @@
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
 
+        <!-- Mensajería Kafka (Productor de eventos analíticos y de auditoría) -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
         <!-- Monitoreo & Carga de entorno -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

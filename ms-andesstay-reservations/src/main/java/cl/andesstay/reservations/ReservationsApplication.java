@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.reservations;
+package cl.andesstay.reservations;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

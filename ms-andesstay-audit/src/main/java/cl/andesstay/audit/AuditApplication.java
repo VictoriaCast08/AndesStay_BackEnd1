@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.audit;
+package cl.andesstay.audit;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

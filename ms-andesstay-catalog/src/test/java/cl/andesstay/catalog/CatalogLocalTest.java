@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.catalog;
+package cl.andesstay.catalog;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;

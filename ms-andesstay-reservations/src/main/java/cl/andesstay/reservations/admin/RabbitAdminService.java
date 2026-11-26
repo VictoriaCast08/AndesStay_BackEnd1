@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.reservations.admin;
+package cl.andesstay.reservations.admin;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;

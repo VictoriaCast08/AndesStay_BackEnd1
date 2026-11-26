@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.notify.dto;
+package cl.andesstay.notify.dto;
 
 import jakarta.validation.constraints.NotBlank;
 

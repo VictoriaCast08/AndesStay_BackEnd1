@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.bff.config;
+package cl.andesstay.bff.config;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -59,7 +59,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/bff/ping").authenticated()
+                        // Rutas públicas alineadas con AWS API Gateway (sin autorizador JWT)
+                        .requestMatchers(HttpMethod.GET, "/api/bff/ping").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/catalog/units").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/notifications").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(unauthorizedEntryPoint())
@@ -123,18 +126,20 @@ public class SecurityConfig {
     @Bean
     @Profile("azure")
     JwtDecoder azureJwtDecoder(
-            @Value("${andesstay.azure.audience}") String audience) {
+            @Value("${andesstay.azure.audience}") String audience,
+            @Value("${andesstay.azure.tenant-id}") String tenantId) {
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(
-                "https://login.microsoftonline.com/common/discovery/v2.0/keys").build();
+                "https://login.microsoftonline.com/" + tenantId + "/discovery/v2.0/keys").build();
 
         OAuth2TokenValidator<Jwt> timestampValidator = new JwtTimestampValidator();
 
         OAuth2TokenValidator<Jwt> issuerValidator = jwt -> {
             String iss = jwt.getClaimAsString("iss");
-            if (iss != null && (iss.contains("login.microsoftonline.com") || iss.contains("sts.windows.net"))) {
+            if (iss != null && iss.contains(tenantId)
+                    && (iss.contains("login.microsoftonline.com") || iss.contains("sts.windows.net"))) {
                 return OAuth2TokenValidatorResult.success();
             }
-            logger.warn("JWT issuer rechazado. Recibido: {}", iss);
+            logger.warn("JWT issuer rechazado. Recibido: {}, tenant esperado: {}", iss, tenantId);
             return OAuth2TokenValidatorResult.failure(new OAuth2Error(
                     "invalid_token", "The iss claim is not valid", null));
         };

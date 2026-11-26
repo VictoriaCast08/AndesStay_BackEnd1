@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.notify.config;
+package cl.andesstay.notify.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

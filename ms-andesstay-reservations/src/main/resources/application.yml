@@ -20,8 +20,7 @@ spring:
 
   # RabbitMQ - Conexión a Instancia B externa (Productor de eventos)
   rabbitmq:
-    host: ${EC2_RABBITMQ_IP}
-    port: ${RABBITMQ_PORT:5672}
+    addresses: ${RABBITMQ_ADDRESSES:34.194.82.57:5672,34.194.82.57:5673}
     username: ${RABBITMQ_USER}
     password: ${RABBITMQ_PASS}
     template:
@@ -29,6 +28,24 @@ spring:
         enabled: true
         initial-interval: 1000ms
         max-attempts: 3
+
+  # Kafka - Productor de eventos analíticos y de auditoría (clúster 3 brokers)
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      acks: all
+      retries: 3
+      enable-idempotence: true
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: ${SPRING_KAFKA_CONSUMER_GROUP:andesstay-reservations-group}
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+    properties:
+      spring.json.trusted.packages: "*"
 
 server:
   port: 8082
@@ -80,7 +97,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          jwk-set-uri: https://login.microsoftonline.com/common/discovery/v2.0/keys
+          jwk-set-uri: https://login.microsoftonline.com/${AZURE_TENANT_ID}/discovery/v2.0/keys
 
 ---
 spring:

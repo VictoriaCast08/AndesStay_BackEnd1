@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.notify.consumer;
+package cl.andesstay.notify.consumer;
 
 import com.rabbitmq.client.Channel;
 import java.io.IOException;

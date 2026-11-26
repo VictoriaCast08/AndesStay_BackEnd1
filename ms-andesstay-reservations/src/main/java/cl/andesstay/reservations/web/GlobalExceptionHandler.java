@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.reservations.web;
+package cl.andesstay.reservations.web;
 
 import java.util.HashMap;
 import java.util.Map;

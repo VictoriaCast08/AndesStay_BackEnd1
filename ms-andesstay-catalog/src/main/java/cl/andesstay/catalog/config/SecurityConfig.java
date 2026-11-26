@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.catalog.config;
+package cl.andesstay.catalog.config;
 
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
@@ -23,6 +23,7 @@ import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.SecurityFilterChain;
@@ -75,6 +76,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/catalog/units", "/api/catalog/units/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(e -> e.authenticationEntryPoint((req, res, ex) -> {
                     res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -87,7 +89,7 @@ public class SecurityConfig {
 
     @Bean
     CorsConfigurationSource corsConfigurationSource(
-            @Value("${andesstay.cors.allowed-origins:http://localhost:4200}") String origins) {
+            @Value("${andesstay.cors.allowed-origins:http://localhost:4200,http://localhost:5173}") String origins) {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(origins.split(",")));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
@@ -100,12 +102,15 @@ public class SecurityConfig {
     @Bean
     @Profile("azure")
     JwtDecoder azureJwtDecoder(
-            @Value("${andesstay.azure.audience}") String audience) {
+            @Value("${andesstay.azure.audience}") String audience,
+            @Value("${andesstay.azure.tenant-id}") String tenantId) {
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(
-                "https://login.microsoftonline.com/common/discovery/v2.0/keys").build();
+                "https://login.microsoftonline.com/" + tenantId + "/discovery/v2.0/keys").build();
+        OAuth2TokenValidator<Jwt> timestampValidator = new JwtTimestampValidator();
         OAuth2TokenValidator<Jwt> issuerValidator = jwt -> {
             String iss = jwt.getClaimAsString("iss");
-            if (iss != null && (iss.contains("login.microsoftonline.com") || iss.contains("sts.windows.net"))) {
+            if (iss != null && iss.contains(tenantId)
+                    && (iss.contains("login.microsoftonline.com") || iss.contains("sts.windows.net"))) {
                 return OAuth2TokenValidatorResult.success();
             }
             return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "The iss claim is not valid", null));
@@ -118,7 +123,10 @@ public class SecurityConfig {
             }
             return OAuth2TokenValidatorResult.success();
         };
-        jwtDecoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(issuerValidator, audienceValidator));
+        jwtDecoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
+                timestampValidator,
+                issuerValidator,
+                audienceValidator));
         return jwtDecoder;
     }
 }

@@ -47,6 +47,12 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Mensajería Kafka (Productor de eventos de auditoría) -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+        </dependency>
+
         <!-- Monitoreo & Carga de entorno -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.reservations.messaging;
+package cl.andesstay.reservations.messaging;
 
 public class ReservationCommandMessage {
 

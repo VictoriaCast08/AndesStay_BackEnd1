@@ -1,7 +1,7 @@
-package cl.duoc.andesstay.reservations.repo;
+package cl.andesstay.reservations.repo;
 
-import cl.duoc.andesstay.reservations.domain.Reservation;
-import cl.duoc.andesstay.reservations.domain.ReservationStatus;
+import cl.andesstay.reservations.domain.Reservation;
+import cl.andesstay.reservations.domain.ReservationStatus;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;

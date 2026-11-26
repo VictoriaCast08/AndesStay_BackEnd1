@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.notify;
+package cl.andesstay.notify;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

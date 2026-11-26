@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.report.web;
+package cl.andesstay.report.web;
 
 import java.util.List;
 import java.util.Map;

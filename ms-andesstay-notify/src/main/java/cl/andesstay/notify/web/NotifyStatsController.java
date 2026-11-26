@@ -1,6 +1,6 @@
-package cl.duoc.andesstay.notify.web;
+package cl.andesstay.notify.web;
 
-import cl.duoc.andesstay.notify.config.AndesStayRabbitProperties;
+import cl.andesstay.notify.config.AndesStayRabbitProperties;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;

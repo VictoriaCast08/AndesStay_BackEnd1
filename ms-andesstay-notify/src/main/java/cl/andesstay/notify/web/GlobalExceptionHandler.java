@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.notify.web;
+package cl.andesstay.notify.web;
 
 import java.util.HashMap;
 import java.util.Map;

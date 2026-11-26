@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.audit.kafka;
+package cl.andesstay.audit.kafka;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

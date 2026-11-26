@@ -1,7 +1,7 @@
-package cl.duoc.andesstay.reservations.messaging;
+package cl.andesstay.reservations.messaging;
 
-import cl.duoc.andesstay.reservations.config.AndesStayRabbitProperties;
-import cl.duoc.andesstay.reservations.domain.Reservation;
+import cl.andesstay.reservations.config.AndesStayRabbitProperties;
+import cl.andesstay.reservations.domain.Reservation;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 

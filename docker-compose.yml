@@ -5,7 +5,7 @@ networks:
     driver: bridge
 
 services:
-  # --- 1. BFF GATEWAY (Puerto 8080) ---
+  # --- 1. BFF GATEWAY (Puerto 8080 - Único expuesto al exterior / API Gateway) ---
   bff:
     build:
       context: ./bff
@@ -19,14 +19,26 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       EC2_BACKEND_IP: ${EC2_BACKEND_IP}
       AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      ENTRA_CLIENT_ID: ${AZURE_CLIENT_ID}
       AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+      ENTRA_TENANT_ID: ${AZURE_TENANT_ID}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
       AWS_API_GATEWAY_URL: ${AWS_API_GATEWAY_URL}
+      API_GATEWAY_URL: ${API_GATEWAY_URL}
       FRONTEND_URL: ${FRONTEND_URL}
-      RESERVATIONS_SERVICE_URL: http://reservations:8082
       CATALOG_SERVICE_URL: http://catalog:8081
-      REPORT_SERVICE_URL: http://report:8085
+      RESERVATIONS_SERVICE_URL: http://reservations:8082
+      NOTIFY_SERVICE_URL: http://notify:8083
       AUDIT_SERVICE_URL: http://audit:8084
+      REPORT_SERVICE_URL: http://report:8085
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS}
+    depends_on:
+      - catalog
+      - reservations
+      - notify
+      - audit
+      - report
     networks:
       - andesstay-net
     deploy:
@@ -42,20 +54,25 @@ services:
       dockerfile: Dockerfile
     container_name: andesstay-catalog
     ports:
-      - "8081:8081"
+      - "127.0.0.1:8081:8081"
     env_file:
       - .env
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       EC2_BACKEND_IP: ${EC2_BACKEND_IP}
       AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      ENTRA_CLIENT_ID: ${AZURE_CLIENT_ID}
       AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+      ENTRA_TENANT_ID: ${AZURE_TENANT_ID}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-      AWS_DB_HOST: ${AWS_DB_HOST}
+      AWS_DB_HOST: ${RDS_ENDPOINT}
       AWS_DB_PORT: ${AWS_DB_PORT}
       AWS_DB_NAME: ${AWS_DB_NAME}
       AWS_DB_USER: ${AWS_DB_USER}
       AWS_DB_PASS: ${AWS_DB_PASS}
+      RDS_ENDPOINT: ${RDS_ENDPOINT}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS}
     networks:
       - andesstay-net
     deploy:
@@ -71,7 +88,7 @@ services:
       dockerfile: Dockerfile
     container_name: andesstay-reservations
     ports:
-      - "8082:8082"
+      - "127.0.0.1:8082:8082"
     env_file:
       - .env
     environment:
@@ -81,14 +98,20 @@ services:
       RABBITMQ_PORT: ${RABBITMQ_PORT}
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_ADDRESSES: ${RABBITMQ_ADDRESSES}
       AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      ENTRA_CLIENT_ID: ${AZURE_CLIENT_ID}
       AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+      ENTRA_TENANT_ID: ${AZURE_TENANT_ID}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-      AWS_DB_HOST: ${AWS_DB_HOST}
+      AWS_DB_HOST: ${RDS_ENDPOINT}
       AWS_DB_PORT: ${AWS_DB_PORT}
       AWS_DB_NAME: ${AWS_DB_NAME}
       AWS_DB_USER: ${AWS_DB_USER}
       AWS_DB_PASS: ${AWS_DB_PASS}
+      RDS_ENDPOINT: ${RDS_ENDPOINT}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS}
     networks:
       - andesstay-net
     deploy:
@@ -104,7 +127,7 @@ services:
       dockerfile: Dockerfile
     container_name: andesstay-notify
     ports:
-      - "8083:8083"
+      - "127.0.0.1:8083:8083"
     env_file:
       - .env
     environment:
@@ -114,9 +137,14 @@ services:
       RABBITMQ_PORT: ${RABBITMQ_PORT}
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_ADDRESSES: ${RABBITMQ_ADDRESSES}
       AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      ENTRA_CLIENT_ID: ${AZURE_CLIENT_ID}
       AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+      ENTRA_TENANT_ID: ${AZURE_TENANT_ID}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS}
     networks:
       - andesstay-net
     deploy:
@@ -132,20 +160,26 @@ services:
       dockerfile: Dockerfile
     container_name: andesstay-audit
     ports:
-      - "8084:8084"
+      - "127.0.0.1:8084:8084"
     env_file:
       - .env
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       EC2_BACKEND_IP: ${EC2_BACKEND_IP}
       AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      ENTRA_CLIENT_ID: ${AZURE_CLIENT_ID}
       AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+      ENTRA_TENANT_ID: ${AZURE_TENANT_ID}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-      AWS_DB_HOST: ${AWS_DB_HOST}
+      AWS_DB_HOST: ${RDS_ENDPOINT}
       AWS_DB_PORT: ${AWS_DB_PORT}
       AWS_DB_NAME: ${AWS_DB_NAME}
       AWS_DB_USER: ${AWS_DB_USER}
       AWS_DB_PASS: ${AWS_DB_PASS}
+      RDS_ENDPOINT: ${RDS_ENDPOINT}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+      API_GATEWAY_URL: ${API_GATEWAY_URL}
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS}
     networks:
       - andesstay-net
     deploy:
@@ -161,20 +195,26 @@ services:
       dockerfile: Dockerfile
     container_name: andesstay-report
     ports:
-      - "8085:8085"
+      - "127.0.0.1:8085:8085"
     env_file:
       - .env
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       EC2_BACKEND_IP: ${EC2_BACKEND_IP}
       AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      ENTRA_CLIENT_ID: ${AZURE_CLIENT_ID}
       AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+      ENTRA_TENANT_ID: ${AZURE_TENANT_ID}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
-      AWS_DB_HOST: ${AWS_DB_HOST}
+      AWS_DB_HOST: ${RDS_ENDPOINT}
       AWS_DB_PORT: ${AWS_DB_PORT}
       AWS_DB_NAME: ${AWS_DB_NAME}
       AWS_DB_USER: ${AWS_DB_USER}
       AWS_DB_PASS: ${AWS_DB_PASS}
+      RDS_ENDPOINT: ${RDS_ENDPOINT}
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ${SPRING_KAFKA_BOOTSTRAP_SERVERS}
+      API_GATEWAY_URL: ${API_GATEWAY_URL}
+      JAVA_TOOL_OPTIONS: ${JAVA_TOOL_OPTIONS}
     networks:
       - andesstay-net
     deploy:

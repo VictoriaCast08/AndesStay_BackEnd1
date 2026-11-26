@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.audit.domain;
+package cl.andesstay.audit.domain;
 
 import jakarta.persistence.*;
 import java.time.Instant;

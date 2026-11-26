@@ -1,12 +1,9 @@
-package cl.duoc.andesstay.bff.controller;
+package cl.andesstay.bff.controller;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -14,33 +11,56 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 
 @RestController
-@Profile("azure")
-@RequestMapping("/api/bff")
+@RequestMapping("/api")
 public class BffController {
 
     private final RestClient restClient;
+    private final String catalogUrl;
+    private final String reservationsUrl;
+    private final String notifyUrl;
+    private final String auditUrl;
+    private final String reportUrl;
 
-    public BffController(@Value("${andesstay.services.reservations-url}") String reservationsUrl) {
-        this.restClient = RestClient.builder()
-                .baseUrl(reservationsUrl)
-                .build();
+    public BffController(
+            @Value("${andesstay.services.catalog-url:http://catalog:8081}") String catalogUrl,
+            @Value("${andesstay.services.reservations-url:http://reservations:8082}") String reservationsUrl,
+            @Value("${andesstay.services.notify-url:http://notify:8083}") String notifyUrl,
+            @Value("${andesstay.services.audit-url:http://audit:8084}") String auditUrl,
+            @Value("${andesstay.services.report-url:http://report:8085}") String reportUrl) {
+        this.restClient = RestClient.create();
+        this.catalogUrl = catalogUrl;
+        this.reservationsUrl = reservationsUrl;
+        this.notifyUrl = notifyUrl;
+        this.auditUrl = auditUrl;
+        this.reportUrl = reportUrl;
     }
 
-    @GetMapping("/ping")
-    public ResponseEntity<Map<String, Object>> ping(Authentication authentication) {
+    // =========================================================================
+    // 1. ENDPOINTS PROPIOS DEL BFF (/api/bff/...)
+    // =========================================================================
+
+    @GetMapping("/bff/ping")
+    public ResponseEntity<Object> ping(Authentication authentication) {
         return ResponseEntity.ok(Map.of(
-                "service", "ms-andesstay-bff",
-                "status", "ok",
+                "status", "UP",
+                "service", "andesstay-bff",
                 "timestamp", Instant.now().toString(),
-                "user", username(authentication)));
+                "user", username(authentication)
+        ));
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<Map<String, Object>> me(Authentication authentication) {
+    @GetMapping("/bff/me")
+    @PreAuthorize("hasAnyRole('Admin','Operador','Cliente','Auditor')")
+    public ResponseEntity<Object> me(Authentication authentication) {
         Map<String, Object> claims = Map.of();
-        if (authentication.getPrincipal() instanceof Jwt jwt) {
+        if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
             claims = Map.of(
                     "sub", nullSafe(jwt.getSubject()),
                     "preferred_username", nullSafe(jwt.getClaimAsString("preferred_username")),
@@ -48,134 +68,226 @@ public class BffController {
                     "iss", nullSafe(jwt.getIssuer() != null ? jwt.getIssuer().toString() : null),
                     "aud", jwt.getAudience() != null ? jwt.getAudience() : List.of(),
                     "roles", roles(authentication),
-                    "exp", jwt.getExpiresAt() != null ? jwt.getExpiresAt().toString() : null);
+                    "exp", jwt.getExpiresAt() != null ? jwt.getExpiresAt().toString() : ""
+            );
         }
         return ResponseEntity.ok(Map.of(
                 "user", username(authentication),
-                "authorities", authorities(authentication),
                 "roles", roles(authentication),
-                "claims", claims));
+                "claims", claims
+        ));
     }
 
-    // LISTAR RESERVAS DESDE EL MICROSERVICIO / API MANAGER
+    @GetMapping("/bff/dashboard")
+    @PreAuthorize("hasAnyRole('Admin','Operador','Auditor')")
+    public ResponseEntity<Object> dashboard(Authentication authentication, HttpServletRequest request) {
+        Object kpis = safeGet(reportUrl + "/api/report/kpis", request);
+        Object topUnits = safeGet(reportUrl + "/api/report/top-units", request);
+        return ResponseEntity.ok(Map.of(
+                "user", username(authentication),
+                "roles", roles(authentication),
+                "kpis", kpis != null ? kpis : Map.of(),
+                "topUnits", topUnits != null ? topUnits : List.of()
+        ));
+    }
+
+    @GetMapping("/bff/reservations")
+    @PreAuthorize("hasAnyRole('Admin','Operador','Cliente')")
+    public ResponseEntity<Object> getBffReservations(
+            @RequestParam(required = false) String status,
+            HttpServletRequest request) {
+        String uri = reservationsUrl + "/api/reservations" + (status != null ? "?status=" + status : "");
+        return forward(HttpMethod.GET, uri, null, request);
+    }
+
+    @PostMapping("/bff/reservations")
+    @PreAuthorize("hasAnyRole('Admin','Operador','Cliente')")
+    public ResponseEntity<Object> createBffReservation(
+            @RequestBody Map<String, Object> body,
+            HttpServletRequest request) {
+        return forward(HttpMethod.POST, reservationsUrl + "/api/reservations", body, request);
+    }
+
+    @PutMapping("/bff/reservations/{id}/status")
+    @PreAuthorize("hasAnyRole('Admin','Operador')")
+    public ResponseEntity<Object> updateBffReservationStatus(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body,
+            HttpServletRequest request) {
+        return forward(HttpMethod.PUT, reservationsUrl + "/api/reservations/" + id + "/status", body, request);
+    }
+
+    // =========================================================================
+    // 2. CATALOG (/api/catalog/...) -> catalog:8081
+    // =========================================================================
+
+    @GetMapping("/catalog/units")
+    public ResponseEntity<Object> getCatalogUnits(HttpServletRequest request) {
+        return forward(HttpMethod.GET, catalogUrl + "/api/catalog/units", null, request);
+    }
+
+    @PostMapping("/catalog/units")
+    @PreAuthorize("hasRole('Admin')")
+    public ResponseEntity<Object> createCatalogUnit(
+            @RequestBody Map<String, Object> body,
+            HttpServletRequest request) {
+        return forward(HttpMethod.POST, catalogUrl + "/api/catalog/units", body, request);
+    }
+
+    @PutMapping("/catalog/units/{id}")
+    @PreAuthorize("hasAnyRole('Admin','Operador')")
+    public ResponseEntity<Object> updateCatalogUnit(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body,
+            HttpServletRequest request) {
+        return forward(HttpMethod.PUT, catalogUrl + "/api/catalog/units/" + id, body, request);
+    }
+
+    // =========================================================================
+    // 3. RESERVATIONS (/api/reservations/...) -> reservations:8082
+    // =========================================================================
+
     @GetMapping("/reservations")
     @PreAuthorize("hasAnyRole('Admin','Operador','Cliente')")
-    public List<Object> getReservations(@RequestHeader(value = "Authorization", required = false) String token) {
-        return restClient.get()
-                .uri("/api/reservations")
-                .header("Authorization", token)
-                .retrieve()
-                .body(new ParameterizedTypeReference<List<Object>>() {});
+    public ResponseEntity<Object> getReservations(
+            @RequestParam(required = false) String status,
+            HttpServletRequest request) {
+        String uri = reservationsUrl + "/api/reservations" + (status != null ? "?status=" + status : "");
+        return forward(HttpMethod.GET, uri, null, request);
     }
 
-    // CREAR RESERVA EN EL MICROSERVICIO / API MANAGER
+    @GetMapping("/reservations/{id}")
+    @PreAuthorize("hasAnyRole('Admin','Operador','Cliente')")
+    public ResponseEntity<Object> getReservationById(
+            @PathVariable Long id,
+            HttpServletRequest request) {
+        return forward(HttpMethod.GET, reservationsUrl + "/api/reservations/" + id, null, request);
+    }
+
     @PostMapping("/reservations")
     @PreAuthorize("hasAnyRole('Admin','Operador','Cliente')")
-    public Object createReservation(@RequestBody Object reservationBody,
-                                    @RequestHeader(value = "Authorization", required = false) String token) {
-        return restClient.post()
-                .uri("/api/reservations")
-                .header("Authorization", token)
-                .body(reservationBody)
-                .retrieve()
-                .body(Object.class);
+    public ResponseEntity<Object> createReservation(
+            @RequestBody Map<String, Object> body,
+            HttpServletRequest request) {
+        return forward(HttpMethod.POST, reservationsUrl + "/api/reservations", body, request);
     }
 
-    // CAMBIAR ESTADO DE RESERVA EN EL MICROSERVICIO
     @PutMapping("/reservations/{id}/status")
     @PreAuthorize("hasAnyRole('Admin','Operador')")
-    public Object changeStatus(@PathVariable Long id,
-                               @RequestBody Object statusBody,
-                               @RequestHeader(value = "Authorization", required = false) String token) {
-        return restClient.put()
-                .uri("/api/reservations/{id}/status", id)
-                .header("Authorization", token)
-                .body(statusBody)
-                .retrieve()
-                .body(Object.class);
+    public ResponseEntity<Object> updateReservationStatus(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body,
+            HttpServletRequest request) {
+        return forward(HttpMethod.PUT, reservationsUrl + "/api/reservations/" + id + "/status", body, request);
     }
 
-    @GetMapping("/dashboard")
-    public ResponseEntity<Map<String, Object>> dashboard(Authentication authentication) {
-        List<String> roles = roles(authentication);
-        Map<String, Object> body;
-        if (roles.contains("Admin")) {
-            body = Map.of(
-                    "view", "admin",
-                    "title", "Panel de operaciones",
-                    "kpis", Map.of(
-                            "ocupacionActiva", 72,
-                            "reservasHoy", 18,
-                            "checkinsPendientes", 5,
-                            "checkoutsHoy", 7),
-                    "message", "Ocupación y KPIs de la red AndesStay");
-        } else if (roles.contains("Operador")) {
-            body = Map.of(
-                    "view", "operador",
-                    "title", "Llegadas y salidas",
-                    "llegadas", List.of(
-                            Map.of("unidad", "Cabaña Ñuble", "huesped", "Camila Rojas", "estado", "CONFIRMADA"),
-                            Map.of("unidad", "Hostal Sur", "huesped", "Diego Paredes", "estado", "CHECKIN_PENDIENTE")),
-                    "salidas", List.of(
-                            Map.of("unidad", "Lodge Pucón", "huesped", "Ana Beltrán", "estado", "EN_ESTADÍA")),
-                    "message", "Operación del día para recepción");
-        } else if (roles.contains("Auditor")) {
-            body = Map.of(
-                    "view", "auditor",
-                    "title", "Auditoría de hospedaje",
-                    "eventosRecientes", 12,
-                    "message", "Solo lectura: timeline de eventos");
-        } else {
-            body = Map.of(
-                    "view", "cliente",
-                    "title", "Mis reservas",
-                    "activas", List.of(
-                            Map.of("id", "RSV-1042", "unidad", "Cabaña Ñuble", "estado", "CREADA", "desde", "2026-04-12")),
-                    "message", "Estado de tus reservas AndesStay");
-        }
-        return ResponseEntity.ok(body);
+    // =========================================================================
+    // 4. NOTIFY & RABBITMQ ADMIN -> notify:8083
+    // =========================================================================
+
+    @PostMapping("/notifications")
+    public ResponseEntity<Object> sendNotification(
+            @RequestBody Map<String, Object> body,
+            HttpServletRequest request) {
+        return forward(HttpMethod.POST, notifyUrl + "/api/notifications", body, request);
     }
 
-    private static String username(Authentication authentication) {
-        if (authentication == null) {
-            return "anonymous";
-        }
-        if (authentication.getPrincipal() instanceof Jwt jwt) {
-            String preferred = jwt.getClaimAsString("preferred_username");
-            if (preferred != null && !preferred.isBlank()) {
-                return preferred;
+    @GetMapping("/admin/rabbit/queues")
+    @PreAuthorize("hasRole('Admin')")
+    public ResponseEntity<Object> getRabbitQueues(HttpServletRequest request) {
+        return forward(HttpMethod.GET, notifyUrl + "/api/admin/rabbit/queues", null, request);
+    }
+
+    @DeleteMapping("/admin/rabbit/queues/{name}")
+    @PreAuthorize("hasRole('Admin')")
+    public ResponseEntity<Object> deleteRabbitQueue(
+            @PathVariable String name,
+            HttpServletRequest request) {
+        return forward(HttpMethod.DELETE, notifyUrl + "/api/admin/rabbit/queues/" + name, null, request);
+    }
+
+    @GetMapping("/admin/rabbit/exchanges")
+    @PreAuthorize("hasRole('Admin')")
+    public ResponseEntity<Object> getRabbitExchanges(HttpServletRequest request) {
+        return forward(HttpMethod.GET, notifyUrl + "/api/admin/rabbit/exchanges", null, request);
+    }
+
+    @DeleteMapping("/admin/rabbit/exchanges/{name}")
+    @PreAuthorize("hasRole('Admin')")
+    public ResponseEntity<Object> deleteRabbitExchange(
+            @PathVariable String name,
+            HttpServletRequest request) {
+        return forward(HttpMethod.DELETE, notifyUrl + "/api/admin/rabbit/exchanges/" + name, null, request);
+    }
+
+    // =========================================================================
+    // 5. AUDIT & REPORT -> audit:8084 / report:8085
+    // =========================================================================
+
+    @GetMapping("/audit/timeline")
+    @PreAuthorize("hasAnyRole('Admin','Auditor')")
+    public ResponseEntity<Object> getAuditTimeline(HttpServletRequest request) {
+        return forward(HttpMethod.GET, auditUrl + "/api/audit/timeline", null, request);
+    }
+
+    @GetMapping("/report/kpis")
+    @PreAuthorize("hasRole('Admin')")
+    public ResponseEntity<Object> getReportKpis(HttpServletRequest request) {
+        return forward(HttpMethod.GET, reportUrl + "/api/report/kpis", null, request);
+    }
+
+    @GetMapping("/report/top-units")
+    @PreAuthorize("hasRole('Admin')")
+    public ResponseEntity<Object> getReportTopUnits(HttpServletRequest request) {
+        return forward(HttpMethod.GET, reportUrl + "/api/report/top-units", null, request);
+    }
+
+    // =========================================================================
+    // MÉTODOS AUXILIARES DE REENVÍO Y SEGURIDAD
+    // =========================================================================
+
+    private ResponseEntity<Object> forward(HttpMethod method, String uri, Object body, HttpServletRequest request) {
+        try {
+            RestClient.RequestBodySpec spec = restClient.method(method).uri(uri);
+            String auth = request.getHeader(HttpHeaders.AUTHORIZATION);
+            if (auth != null && !auth.isBlank()) {
+                spec.header(HttpHeaders.AUTHORIZATION, auth);
             }
-            String name = jwt.getClaimAsString("name");
-            if (name != null && !name.isBlank()) {
-                return name;
+            if (body != null) {
+                spec.body(body);
             }
+            return spec.retrieve().toEntity(Object.class);
+        } catch (RestClientResponseException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ex.getResponseBodyAsString());
         }
-        return authentication.getName();
     }
 
-    private static List<String> roles(Authentication authentication) {
-        if (authentication == null) {
-            return List.of();
+    private Object safeGet(String uri, HttpServletRequest request) {
+        try {
+            return forward(HttpMethod.GET, uri, null, request).getBody();
+        } catch (Exception e) {
+            return null;
         }
-        return authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .filter(a -> a.startsWith("ROLE_"))
-                .map(a -> a.substring("ROLE_".length()))
-                .sorted()
-                .collect(Collectors.toList());
     }
 
-    private static List<String> authorities(Authentication authentication) {
-        if (authentication == null) {
-            return List.of();
+    private String username(Authentication auth) {
+        if (auth == null) return "anonymous";
+        if (auth.getPrincipal() instanceof Jwt jwt) {
+            String pref = jwt.getClaimAsString("preferred_username");
+            return pref != null ? pref : jwt.getSubject();
         }
-        return authentication.getAuthorities().stream()
+        return auth.getName();
+    }
+
+    private List<String> roles(Authentication auth) {
+        if (auth == null) return List.of();
+        return auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .sorted()
+                .map(r -> r.startsWith("ROLE_") ? r.substring(5) : r)
                 .toList();
     }
 
-    private static Object nullSafe(String value) {
-        return value == null ? "" : value;
+    private String nullSafe(String value) {
+        return value != null ? value : "";
     }
 }

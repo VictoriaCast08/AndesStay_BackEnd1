@@ -2,3 +2,4 @@ target/
 *.jar
 .idea/
 *.log
+.env

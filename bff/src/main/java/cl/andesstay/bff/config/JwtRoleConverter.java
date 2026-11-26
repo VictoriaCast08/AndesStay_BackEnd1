@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.bff.config;
+package cl.andesstay.bff.config;
 
 import java.util.ArrayList;
 import java.util.Collection;

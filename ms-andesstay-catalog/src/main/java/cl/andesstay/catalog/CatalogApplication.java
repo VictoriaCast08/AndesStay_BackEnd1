@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.catalog;
+package cl.andesstay.catalog;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

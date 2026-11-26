@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.reservations.domain;
+package cl.andesstay.reservations.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

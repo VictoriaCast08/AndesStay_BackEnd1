@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.reservations.web.dto;
+package cl.andesstay.reservations.web.dto;
 
 import jakarta.validation.constraints.NotBlank;
 

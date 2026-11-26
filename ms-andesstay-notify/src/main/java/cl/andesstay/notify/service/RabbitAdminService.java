@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.notify.service;
+package cl.andesstay.notify.service;
 
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.DirectExchange;

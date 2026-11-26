@@ -1,4 +1,4 @@
-package cl.duoc.andesstay.notify.config;
+package cl.andesstay.notify.config;
 
 import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;

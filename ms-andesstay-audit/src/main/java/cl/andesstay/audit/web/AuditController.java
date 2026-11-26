@@ -1,10 +1,10 @@
-package cl.duoc.andesstay.audit.web;
+package cl.andesstay.audit.web;
 
 import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import cl.duoc.andesstay.audit.domain.AuditEvent;
-import cl.duoc.andesstay.audit.repo.AuditEventRepository;
+import cl.andesstay.audit.domain.AuditEvent;
+import cl.andesstay.audit.repo.AuditEventRepository;
 
 @RestController
 @RequestMapping("/api/audit")
